@@ -5,7 +5,8 @@ pub mod cpu;
 pub mod ppu;
 
 fn main() {
-    let rom_path = "/Users/robertocastro/dev/nesasm/minimal.nes";
+    // TODO: make this a command line argument
+    let rom_path = "./minimal.nes"; // Replace with your actual ROM path
 
     println!("Attempting to load ROM: {}", rom_path);
 
