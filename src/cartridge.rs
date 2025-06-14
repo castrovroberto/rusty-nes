@@ -208,7 +208,7 @@ mod tests {
             0x4E, 0x45, 0x53, 0x1A, // "NES\x1A"
             0x02,                   // PRG ROM size: 2 * 16KB
             0x00,                   // CHR ROM size: 0 (implies CHR RAM)
-            0b00010111,             // Flags 6: Mapper lower 1, FourScreen, Trainer, Battery, Vertical
+            0b00011111,             // Flags 6: Mapper lower 1, FourScreen, Trainer, Battery, Vertical
             0b00010000,             // Flags 7: Mapper upper 1
             0x00, 0x00, 0x00, 0x00, 
             0x00, 0x00, 0x00, 0x00

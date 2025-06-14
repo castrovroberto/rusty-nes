@@ -35,20 +35,18 @@ A Nintendo Entertainment System (NES) emulator written in Rust. This project aim
 
 ### Running
 
-The emulator currently loads a specified `.nes` ROM file and prints its header information.
+The emulator loads a `.nes` ROM file specified on the command line and prints its
+header information.
 
 1.  Ensure you have a `.nes` ROM file. For initial testing, a simple Mapper 0 ROM is recommended.
-2.  Run the emulator, passing the path to your ROM file as an argument to the `main` function (you will need to modify `src/main.rs` to accept command-line arguments or update the hardcoded path).
+2.  Run the emulator and pass the path to your ROM file:
 
-    Currently, the ROM path is hardcoded in `src/main.rs`. To test:
-    *   Place your test ROM (e.g., `test_rom.nes`) in the project root or update the path in `src/main.rs`.
-    *   Then run:
     ```bash
-    cargo run
+    cargo run -- path/to/your_rom.nes
     ```
     The output will display the parsed header information from the ROM.
 
-    *(Future versions will take the ROM path as a command-line argument and start actual emulation.)*
+    *(Future versions will start actual emulation.)*
 
 ### Running Tests
 

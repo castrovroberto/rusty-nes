@@ -5,8 +5,12 @@ pub mod cpu;
 pub mod ppu;
 
 fn main() {
-    // TODO: make this a command line argument
-    let rom_path = "./minimal.nes"; // Replace with your actual ROM path
+    let args: Vec<String> = std::env::args().collect();
+    if args.len() < 2 {
+        eprintln!("Usage: {} <path_to_rom>", args[0]);
+        std::process::exit(1);
+    }
+    let rom_path = &args[1];
 
     println!("Attempting to load ROM: {}", rom_path);
 
