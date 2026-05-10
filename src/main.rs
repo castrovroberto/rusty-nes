@@ -1,12 +1,12 @@
-pub mod apu;
-pub mod bus;
-pub mod cartridge;
-pub mod cpu;
-pub mod ppu;
+use rusty_nes::cartridge;
 
 fn main() {
-    // TODO: make this a command line argument
-    let rom_path = "./minimal.nes"; // Replace with your actual ROM path
+    let args: Vec<String> = std::env::args().collect();
+    if args.len() != 2 {
+        eprintln!("Usage: {} <rom_path>", args[0]);
+        std::process::exit(1);
+    }
+    let rom_path = &args[1];
 
     println!("Attempting to load ROM: {}", rom_path);
 
