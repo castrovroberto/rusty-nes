@@ -10,7 +10,12 @@ pub const FLAG_UNUSED: u8 = 0x20;
 pub const FLAG_OVERFLOW: u8 = 0x40;
 pub const FLAG_NEGATIVE: u8 = 0x80;
 
-pub struct Cpu {
+pub trait CpuBus {
+    fn read(&self, addr: u16) -> u8;
+    fn write(&mut self, addr: u16, data: u8);
+}
+
+pub struct Cpu<B: CpuBus> {
     pub a: u8,
     pub x: u8,
     pub y: u8,
@@ -18,11 +23,11 @@ pub struct Cpu {
     pub pc: u16,
     pub status: u8,
     pub cycles: u64,
-    pub memory: [u8; 0x10000],
+    pub bus: B,
 }
 
-impl Cpu {
-    pub fn new() -> Self {
+impl<B: CpuBus> Cpu<B> {
+    pub fn new(bus: B) -> Self {
         Cpu {
             a: 0,
             x: 0,
@@ -31,7 +36,7 @@ impl Cpu {
             pc: 0,
             status: FLAG_IRQ_DISABLE | FLAG_UNUSED,
             cycles: 0,
-            memory: [0; 0x10000],
+            bus,
         }
     }
 
@@ -48,11 +53,11 @@ impl Cpu {
     // --- Memory access ---
 
     pub fn read_u8(&self, addr: u16) -> u8 {
-        self.memory[addr as usize]
+        self.bus.read(addr)
     }
 
     pub fn write_u8(&mut self, addr: u16, data: u8) {
-        self.memory[addr as usize] = data;
+        self.bus.write(addr, data);
     }
 
     pub fn read_u16(&self, addr: u16) -> u16 {
@@ -912,7 +917,7 @@ impl Cpu {
 
 // --- Disassembler (used for nestest logging) ---
 
-pub fn disassemble(cpu: &Cpu, addr: u16) -> String {
+pub fn disassemble<B: CpuBus>(cpu: &Cpu<B>, addr: u16) -> String {
     let opcode = cpu.read_u8(addr);
     let b1 = cpu.read_u8(addr.wrapping_add(1));
     let b2 = cpu.read_u8(addr.wrapping_add(2));
@@ -1156,15 +1161,16 @@ pub fn disassemble(cpu: &Cpu, addr: u16) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::bus::FlatBus;
 
-    fn make_cpu(program: &[u8], start: u16) -> Cpu {
-        let mut cpu = Cpu::new();
+    fn make_cpu(program: &[u8], start: u16) -> Cpu<FlatBus> {
+        let mut bus = FlatBus::new();
         for (i, &byte) in program.iter().enumerate() {
-            cpu.memory[start as usize + i] = byte;
+            bus.mem[start as usize + i] = byte;
         }
-        // Set reset vector to start
-        cpu.memory[0xFFFC] = (start & 0xFF) as u8;
-        cpu.memory[0xFFFD] = (start >> 8) as u8;
+        bus.mem[0xFFFC] = (start & 0xFF) as u8;
+        bus.mem[0xFFFD] = (start >> 8) as u8;
+        let mut cpu = Cpu::new(bus);
         cpu.reset();
         cpu
     }
@@ -1200,7 +1206,7 @@ mod tests {
         let mut cpu = make_cpu(&[0x85, 0x10], 0x0200);
         cpu.a = 0xAB;
         cpu.step();
-        assert_eq!(cpu.memory[0x10], 0xAB);
+        assert_eq!(cpu.bus.mem[0x10], 0xAB);
     }
 
     #[test]
@@ -1268,14 +1274,14 @@ mod tests {
 
     #[test]
     fn test_jsr_rts() {
-        // JSR $0210, then at $0210: RTS
-        let mut cpu = Cpu::new();
-        cpu.memory[0x0200] = 0x20; // JSR
-        cpu.memory[0x0201] = 0x10;
-        cpu.memory[0x0202] = 0x02; // target $0210
-        cpu.memory[0x0210] = 0x60; // RTS
-        cpu.memory[0xFFFC] = 0x00;
-        cpu.memory[0xFFFD] = 0x02;
+        let mut bus = FlatBus::new();
+        bus.mem[0x0200] = 0x20; // JSR
+        bus.mem[0x0201] = 0x10;
+        bus.mem[0x0202] = 0x02; // target $0210
+        bus.mem[0x0210] = 0x60; // RTS
+        bus.mem[0xFFFC] = 0x00;
+        bus.mem[0xFFFD] = 0x02;
+        let mut cpu = Cpu::new(bus);
         cpu.reset();
         cpu.step(); // JSR
         assert_eq!(cpu.pc, 0x0210);
@@ -1301,9 +1307,10 @@ mod tests {
 
     #[test]
     fn test_stack_push_pop() {
-        let mut cpu = Cpu::new();
-        cpu.memory[0xFFFC] = 0x00;
-        cpu.memory[0xFFFD] = 0x02;
+        let mut bus = FlatBus::new();
+        bus.mem[0xFFFC] = 0x00;
+        bus.mem[0xFFFD] = 0x02;
+        let mut cpu = Cpu::new(bus);
         cpu.reset();
         cpu.stack_push(0xAB);
         cpu.stack_push(0xCD);
@@ -1313,16 +1320,16 @@ mod tests {
 
     #[test]
     fn test_jmp_indirect_page_wrap_bug() {
-        // JMP ($10FF) should read lo from $10FF and hi from $1000 (not $1100)
-        let mut cpu = Cpu::new();
-        cpu.memory[0x10FF] = 0x34;
-        cpu.memory[0x1000] = 0x12; // bug: wraps within page
-        cpu.memory[0x1100] = 0xFF; // this should NOT be used
-        cpu.memory[0x0200] = 0x6C; // JMP indirect
-        cpu.memory[0x0201] = 0xFF;
-        cpu.memory[0x0202] = 0x10;
-        cpu.memory[0xFFFC] = 0x00;
-        cpu.memory[0xFFFD] = 0x02;
+        let mut bus = FlatBus::new();
+        bus.mem[0x10FF] = 0x34;
+        bus.mem[0x1000] = 0x12; // bug: wraps within page
+        bus.mem[0x1100] = 0xFF; // this should NOT be used
+        bus.mem[0x0200] = 0x6C; // JMP indirect
+        bus.mem[0x0201] = 0xFF;
+        bus.mem[0x0202] = 0x10;
+        bus.mem[0xFFFC] = 0x00;
+        bus.mem[0xFFFD] = 0x02;
+        let mut cpu = Cpu::new(bus);
         cpu.reset();
         cpu.step();
         assert_eq!(cpu.pc, 0x1234);
@@ -1340,12 +1347,13 @@ mod tests {
 
     #[test]
     fn test_bit_instruction() {
-        let mut cpu = Cpu::new();
-        cpu.memory[0x0010] = 0b1100_0000; // N=1, V=1
-        cpu.memory[0x0200] = 0x24;        // BIT zero page
-        cpu.memory[0x0201] = 0x10;
-        cpu.memory[0xFFFC] = 0x00;
-        cpu.memory[0xFFFD] = 0x02;
+        let mut bus = FlatBus::new();
+        bus.mem[0x0010] = 0b1100_0000; // N=1, V=1
+        bus.mem[0x0200] = 0x24;        // BIT zero page
+        bus.mem[0x0201] = 0x10;
+        bus.mem[0xFFFC] = 0x00;
+        bus.mem[0xFFFD] = 0x02;
+        let mut cpu = Cpu::new(bus);
         cpu.reset();
         cpu.a = 0b0000_1111; // A & mem = 0 → Z set
         cpu.step();

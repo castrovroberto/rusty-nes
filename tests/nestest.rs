@@ -2,21 +2,22 @@
 // Loads the ROM at $C000/$8000, starts at $C000, and compares logged state
 // against the reference log line by line.
 
+use rusty_nes::bus::FlatBus;
 use rusty_nes::cpu::{Cpu, disassemble};
 use rusty_nes::cartridge::Cartridge;
 
-fn load_nestest(cpu: &mut Cpu) {
+fn load_nestest(cpu: &mut Cpu<FlatBus>) {
     let cart = Cartridge::from_file("tests/roms/nestest.nes")
         .expect("tests/roms/nestest.nes not found — run from project root");
 
     // nestest is 16KB PRG — mirror it at $8000 and $C000
     for i in 0..cart.prg_rom.len() {
-        cpu.memory[0x8000 + i] = cart.prg_rom[i];
-        cpu.memory[0xC000 + i] = cart.prg_rom[i];
+        cpu.bus.mem[0x8000 + i] = cart.prg_rom[i];
+        cpu.bus.mem[0xC000 + i] = cart.prg_rom[i];
     }
 }
 
-fn cpu_log_line(cpu: &Cpu) -> String {
+fn cpu_log_line(cpu: &Cpu<FlatBus>) -> String {
     let pc = cpu.pc;
     let op0 = cpu.read_u8(pc);
     let op1 = cpu.read_u8(pc.wrapping_add(1));
@@ -89,7 +90,7 @@ fn nestest_official_opcodes() {
     let log = include_str!("roms/nestest.log");
     let reference_lines: Vec<&str> = log.lines().collect();
 
-    let mut cpu = Cpu::new();
+    let mut cpu = Cpu::new(FlatBus::new());
     load_nestest(&mut cpu);
 
     // nestest requires starting at $C000 with cycles=7 (as if after reset)
@@ -125,7 +126,7 @@ fn nestest_all_opcodes() {
     let log = include_str!("roms/nestest.log");
     let reference_lines: Vec<&str> = log.lines().collect();
 
-    let mut cpu = Cpu::new();
+    let mut cpu = Cpu::new(FlatBus::new());
     load_nestest(&mut cpu);
 
     cpu.pc = 0xC000;
