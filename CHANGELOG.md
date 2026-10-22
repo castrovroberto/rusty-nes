@@ -23,6 +23,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - README updated to reflect CPU and bus progress.
 
+### Removed
+
+- `NesHeader::four_screen_mode`, which duplicated `Mirroring::FourScreen`.
+
 ### Fixed
 
 - Header parsing unit test.

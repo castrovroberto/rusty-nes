@@ -20,7 +20,6 @@ fn main() {
             println!("Mirroring: {:?}", cartridge.header.mirroring);
             println!("Has Battery-Backed RAM: {}", cartridge.header.has_battery_backed_ram);
             println!("Has Trainer: {}", cartridge.header.has_trainer);
-            println!("Four-Screen Mode: {}", cartridge.header.four_screen_mode);
             println!("Flags 6: 0b{:08b}", cartridge.header.flags6);
             println!("Flags 7: 0b{:08b}", cartridge.header.flags7);
             println!("--- ROM Data ---");

@@ -101,7 +101,6 @@ mod tests {
                 mirroring: Mirroring::Horizontal,
                 has_battery_backed_ram: false,
                 has_trainer: false,
-                four_screen_mode: false,
             },
             prg_rom: prg,
             chr_rom: vec![],

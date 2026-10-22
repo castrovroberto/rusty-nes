@@ -24,7 +24,6 @@ pub struct NesHeader {
     pub mirroring: Mirroring,
     pub has_battery_backed_ram: bool,
     pub has_trainer: bool, // 512-byte trainer at $7000-$71FF
-    pub four_screen_mode: bool,
 }
 
 impl NesHeader {
@@ -64,7 +63,6 @@ impl NesHeader {
             mirroring,
             has_battery_backed_ram,
             has_trainer,
-            four_screen_mode: (flags6 & 0x08) != 0,
         })
     }
 }
@@ -181,7 +179,6 @@ mod tests {
         assert!(matches!(header.mirroring, Mirroring::Horizontal));
         assert!(!header.has_battery_backed_ram);
         assert!(!header.has_trainer);
-        assert!(!header.four_screen_mode);
         assert_eq!(header.flags6, 0x00);
         assert_eq!(header.flags7, 0x00);
     }
@@ -224,7 +221,6 @@ mod tests {
         assert!(matches!(header.mirroring, Mirroring::FourScreen)); // FourScreen overrides Vertical bit
         assert!(header.has_battery_backed_ram);
         assert!(header.has_trainer);
-        assert!(header.four_screen_mode);
 
         // Test Vertical Mirroring specifically when FourScreen is not set
         let header_data_vertical: [u8; 16] = [
@@ -237,6 +233,5 @@ mod tests {
         ];
         let header_vertical = NesHeader::from_bytes(&header_data_vertical).unwrap();
         assert!(matches!(header_vertical.mirroring, Mirroring::Vertical));
-        assert!(!header_vertical.four_screen_mode);
     }
 } 

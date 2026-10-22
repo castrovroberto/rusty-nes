@@ -25,7 +25,7 @@ Run tests from the repo root: `tests/nestest.rs` opens `tests/roms/nestest.nes` 
   - `Bus`: the real NES memory map (2 KB RAM mirrored through `$1FFF`, cartridge PRG at `$8000–$FFFF` with NROM-128 mirroring). PPU (`$2000–$3FFF`) and APU/IO (`$4000–$4017`) ranges are stubbed to return 0. Only mapper 0 is handled.
   - `FlatBus`: a flat 64 KB array used by the CPU unit tests and nestest, so they don't depend on the real memory map. Keep CPU tests on `FlatBus`.
 - **CPU (`src/cpu.rs`)**: `step()` runs one instruction through a single big `match opcode`, and each arm returns that instruction's cycle count. Addressing-mode helpers return `(addr, page_crossed)`, and the arm adds the page-cross penalty itself (e.g. `4 + p as u8`). `step()` adds that count to `cpu.cycles` and also returns it, and `nmi()`/`irq()` add 7. Unofficial opcodes (LAX, SAX, DCP, ISB, SLO, RLA, SRE, RRA, unofficial NOPs) are implemented. `read_u16_bugged` reproduces the 6502 JMP-indirect page-wrap bug. `disassemble()` produces nestest-format text for logging.
-- **Cartridge (`src/cartridge.rs`)**: `Cartridge::from_file` parses the 16-byte iNES header into `NesHeader` (mapper number, `Mirroring`, battery, trainer, four-screen) and loads the trainer, PRG and CHR data. Errors are `String`s.
+- **Cartridge (`src/cartridge.rs`)**: `Cartridge::from_file` parses the 16-byte iNES header into `NesHeader` (mapper number, `Mirroring` including four-screen, battery, trainer) and loads the trainer, PRG and CHR data. Errors are `String`s.
 
 ## nestest conformance
 
