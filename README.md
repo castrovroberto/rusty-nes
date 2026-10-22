@@ -9,6 +9,12 @@ A Nintendo Entertainment System (NES) emulator written in Rust. This project aim
     *   iNES file format header parsing: Can load `.nes` files, read their headers, and extract information like PRG/CHR ROM sizes, mapper number, and mirroring type.
     *   Basic PRG and CHR ROM data loading.
     *   Unit tests for header parsing logic.
+*   **Phase 2: CPU**
+    *   Full Ricoh 2A03 (6502) instruction set, including the unofficial opcodes, with cycle counting and NMI/IRQ handling.
+    *   Passes the [nestest](https://www.qmtpro.com/~nes/misc/nestest.txt) conformance log (PC and cycle count checked on every instruction).
+*   **System bus (in progress)**
+    *   2 KB internal RAM with mirroring, and Mapper 0 (NROM) PRG ROM mapping.
+    *   PPU and APU/IO registers are stubbed for now.
 
 ## Getting Started
 
@@ -50,9 +56,13 @@ header information.
 
 ### Running Tests
 
-To run the unit tests for components like the cartridge loader:
+Run all tests (unit tests plus the nestest CPU conformance test) from the project root:
 ```bash
 cargo test
+```
+To run only the nestest integration test:
+```bash
+cargo test --test nestest
 ```
 
 ## Project Structure
@@ -60,17 +70,17 @@ cargo test
 *   `src/`: Contains the Rust source code for the emulator components.
     *   `main.rs`: Main entry point, currently used for testing ROM loading.
     *   `cartridge.rs`: Logic for loading and parsing `.nes` ROM files and their headers.
-    *   `cpu.rs`: (Planned) NES CPU (Ricoh 2A03, based on 6502) emulation.
+    *   `cpu.rs`: NES CPU (Ricoh 2A03, based on 6502) emulation and a disassembler.
+    *   `bus.rs`: System bus with the NES memory map, plus a flat 64 KB bus used for CPU testing.
     *   `ppu.rs`: (Planned) Picture Processing Unit emulation.
-    *   `bus.rs`: (Planned) System bus connecting CPU, PPU, RAM, and cartridge.
     *   `apu.rs`: (Planned) Audio Processing Unit emulation.
-*   `project/`: Contains project planning documents.
-    *   `rusty-nes.md`: Detailed development roadmap and phases.
+*   `tests/`: Integration tests.
+    *   `nestest.rs`: Runs `roms/nestest.nes` and compares the CPU against `roms/nestest.log`.
 *   `Cargo.toml`: Project manifest and dependencies.
 
 ## Development Roadmap
 
-The emulator is being developed in phases. The next major phase involves implementing the CPU.
+The emulator is being developed in phases. The CPU is done; the next major phase is the PPU, followed by wiring it (and eventually the APU) into the bus.
 My goal is learn a trick or two contribute to the community (maybe) and have fun.
 
 ---
