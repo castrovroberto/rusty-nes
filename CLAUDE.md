@@ -30,3 +30,17 @@ Run tests from the repo root: `tests/nestest.rs` opens `tests/roms/nestest.nes` 
 ## nestest conformance
 
 `tests/nestest.rs` loads the 16 KB PRG into `FlatBus` at both `$8000` and `$C000`, sets PC=`$C000`, SP=`$FD`, P=`$24`, cycles=7, then steps the CPU and compares **PC and CYC only** against `tests/roms/nestest.log` line by line. Register mismatches alone won't fail it. `nestest_official_opcodes` covers lines 1–5003, and `nestest_all_opcodes` also covers the unofficial opcodes. Any CPU change has to keep both passing. The test file keeps its own `opcode_len` table, so update it if instruction lengths change.
+
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked in GitHub Issues for `castrovroberto/rusty-nes`, using the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Uses the five default triage labels (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
