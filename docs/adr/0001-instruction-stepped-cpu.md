@@ -1,0 +1,3 @@
+# Instruction-stepped CPU with PPU catch-up
+
+The CPU runs one whole instruction per step and reports how many CPU cycles it took. The PPU is then caught up by three PPU dots per CPU cycle. This is simple, already passes nestest, and is accurate enough for most games. We accept that it gets some timing-sensitive cases wrong, such as register writes in the middle of a scanline and some strict timing test ROMs. Moving to a CPU that steps one cycle at a time would mean rewriting every opcode in the CPU, so this is hard to reverse. Don't move to cycle stepping unless a specific game or test ROM needs it.
